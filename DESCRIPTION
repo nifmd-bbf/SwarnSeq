@@ -1,0 +1,53 @@
+Package: SwarnSeq
+Type: Package
+Title: Differential Expression and Differential Zero Inflation analysis
+Version: 0.99.0
+Authors@R: c(
+    person(
+      "Samarendra", "Das",
+      email = "samarendra.das@icar.org.in",
+      role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-0263-7027")
+    ),
+    person(
+      "Satyajit", "Chhatoi",
+      email = "satyajitchhatoi016@gmail.com",
+      role = c("aut")
+    ),
+    person(
+      given = "Indian Council of Agricultural Research",
+      role = "fnd"
+    ),
+    person(
+      given = "Science and Engineering Research Board",
+      role = "fnd",
+      comment = "Core Research Grant (CRG004960)"
+  )
+  )
+Description: This R package performs differential expression and differential zero inflation analysis of single-cell RNA-seq (scRNA-seq) UMI counts data through adjusting cell capture efficiency.
+License: GPL-3
+Encoding: UTF-8
+LazyData: false
+RoxygenNote: 7.3.2
+Depends: 
+    R (>= 4.5.1)
+Suggests: 
+    base,
+    stats,
+    MASS,
+    edgeR,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    utils
+Imports: 
+    base,
+    utils,
+    stats,
+    MASS,
+    edgeR
+biocViews: Software, SingleCell, RNASeq, DifferentialExpression, GeneExpression, StatisticalMethod
+URL: https://github.com/nifmd-bbf/SwarnSeq
+BugReports: https://github.com/nifmd-bbf/SwarnSeq/issues
+VignetteBuilder: knitr
+Config/testthat/edition: 3
