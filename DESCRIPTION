@@ -1,7 +1,7 @@
 Package: SwarnSeq
 Type: Package
 Title: Differential Expression and Differential Zero Inflation analysis
-Version: 0.99.1
+Version: 0.99.2
 Authors@R: c(
     person(
       "Samarendra", "Das",
