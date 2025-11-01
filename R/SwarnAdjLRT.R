@@ -4,11 +4,11 @@
 #' The input is a non-negative integer matrix, where rows correspond to genes and columns to individual cells.
 #' The primary objective is to identify genes with statistically significant changes in expression levels between teo predefined groups of cells.
 #' This analysis is a downstream step following the initial read mapping and gene counting, which generates the input matrix. By contrasting the expression profiles of the two groups, the function identifies biomarkers or genes that characterize the biological differences between them.
-#' @param CountData This is a gene-by-cell raw count matrix.
+#' @param sce This is a gene-by-cell raw count matrix single cell experiment object with colData contains 'clusters', 'groups' and 'auxil' as a data frame object.
+#' # clusters: This is a vector of factors with the optimal number of cluster levels, with each entry assigning a cell from the count matrix's columns to its computationally inferred cluster identity.
+#' # groups: This is a vector of factors with 2 levels that serves as a grouping variable that assigns each column (cell) of the count matrix to one of two predefined experimental conditions.
+#' # 'auxil' is for CellAuxil: This is a vector of factors of cell-level metadata that provides additional information about each cell, such as its batch, donor, or quality control metrics, with each entry aligning to a column in the count matrix.
 #' @param norm.method There are three distinct statistical normalization methods for scRNA-seq count data:DESeq2, a maximum likelihood approach described by Ye et al. (2027); TMM, a trimmed mean method introduced by Robinson et al. (2010), both designed to correct for library size and compositional biases; and a third method, which is the log1p standard normalization method for scRNA-seq data.
-#' @param group This is a vector of factors with 2 levels that serves as a grouping variable that assigns each column (cell) of the count matrix to one of two predefined experimental conditions.
-#' @param CellCluster This is a vector of factors with the optimal number of cluster levels, with each entry assigning a cell from the count matrix's columns to its computationally inferred cluster identity.
-#' @param CellAuxil This is a vector of factors of cell-level metadata that provides additional information about each cell, such as its batch, donor, or quality control metrics, with each entry aligning to a column in the count matrix.
 #' @param maxit This is the maximum number of iterations for the Expected-Maximization (EM) algorithm.
 #' @param eps This is the convergence criteria for the Expected-Maximization (EM) algorithm.
 #' @param muoffset This is the offset parameter for mean (mu), with a default value of NULL.
@@ -17,8 +17,9 @@
 #' @param method A string that specifies the method for computing capture efficiencies. ("ML" or "")
 #' @param p.value.adj.method A string that specifies the method for multiple hypothesis correction, which can be any of the following values: "holm," "hochberg," "hommel," "bonferroni," "BH," "BY," "fdr," or "none").
 #' @param RNAspike.use This is a logical parameter. If this parameter is set to TRUE, then it requires you to provide spike counts (spike) and spike concentration (spike.conc) information.
-#' @param spikes This is the observed count matrix for spike-in transcripts, where each row is a spike-in and each column is a cell. It's only required if you set RNAspike.use to TRUE.
-#' @param spike.conc This is a vector of theoretical counts for each spike-in transcript in a single cell, and it's only required if you set RNAspike.use to TRUE.
+#' @param spike_in_sce This is a single cell experiment object which contains the spike-in counts data as the main assay and spike concentrations as its row data.
+#' # spike-in counts: This is the observed count matrix for spike-in transcripts, where each row is a spike-in and each column is a cell. It's only required if you set RNAspike.use to TRUE.
+#' # spike concentrations: This is a vector of theoretical counts for each spike-in transcript in a single cell, and it's only required if you set RNAspike.use to TRUE.
 #' @param CE.range This is a two-element vector that sets the lower and upper limits for the estimated range of capture efficiencies.
 #' @returns
 #' This function analyzes single-cell RNA-sequencing adjusted normalized data to find differentially expressed genes and returns a list of the results.
@@ -30,63 +31,72 @@
 #' @importFrom stats lm
 #' @importFrom stats p.adjust.methods
 #' @importFrom stats p.adjust
+#' @importFrom SummarizedExperiment assays
 #' @export
 #' @examples
 #' # Do not run.
 #' library(SwarnSeq)
+#' library(SingleCellExperiment)
+#' library(SummarizedExperiment)
 #' # Load the test data.
-#' data(TestData)
-#' CountData <- as.matrix(TestData$CountData[1:100,1:50])
-#' X <- cbind(CountData, TestData$CountData[1:100,300:349])
-#' group <- c(rep(1,50), rep(2,50))
-#' CellCluster <- c(rep(1,30), rep(2,20), rep(3, 10), rep(4, 15), rep(5, 25))
-#' group <- as.factor(group)
-#' clust <- as.factor(CellCluster)
-#' # CellAuxil <- as.factor(c(rep("A",14), rep("B",26), rep("C", 40), rep("E", 20)))  # Optional
-#' res <- SwarnSeq::SwarnAdjLRT(CountData=X,norm.method="DEseq.norm",group=group,CellCluster=clust)
-SwarnAdjLRT <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1p"), group, CellCluster, CellAuxil = NULL, maxit = 100, eps = 1E-4, muoffset = NULL, phioffset = NULL, weights = NULL, method = "ML", p.value.adj.method = "BH", RNAspike.use = FALSE, spikes, spike.conc, CE.range = c(.01,.5)){
-    show.custom.warning <- function(x) warning(x);show.custom.metod <- function(x) message(x)
+#' data(SwarnSeqToyData); data(SpikeInData)
+#' data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
+#' groups <- SwarnSeqToyData$groups[c(1:50, 350:399)]
+#' clusters <- SwarnSeqToyData$clusters[c(1:50, 350:399)]
+#' X <- data.frame(clusters = clusters, groups = groups)
+#' testData <- SingleCellExperiment(assays = list(counts = data), colData = X)
+#' # SpikeInData <- SingleCellExperiment(assays = list(SpikeCounts),rowData=SpikeConc)
+#' # Make the spike-in single cell experiment object like this.
+#'
+#' res <- swarnAdjLrt(sce=testData,norm.method="log1p",RNAspike.use=FALSE)
+swarnAdjLrt <- function(sce, norm.method = c("DEseq.norm", "TMM", "log1p"), maxit = 100, eps = 1E-4, muoffset = NULL, phioffset = NULL, weights = NULL, method = "ML", p.value.adj.method = "BH", RNAspike.use = FALSE, spike_in_sce, CE.range = c(.01,.5)){
+    CountData <- assays(sce)[[1]]; group <- sce$groups
+    CellCluster <- sce$clusters; CellAuxil <- sce$auxil
+    if (RNAspike.use == TRUE) {
+        spikes <- assays(spike_in_sce)[[1]]
+        spike.conc <- SingleCellExperiment::rowData(spike_in_sce)[[1]]
+    }
     if (!is.matrix(CountData)) {
-        show.custom.warning("Wrong input data type of count data...")
+        warning("Wrong input data type of count data...")
         return(invisible(NULL))
     }
     if (sum(is.na(CountData)) > 0) {
-        show.custom.warning("NAs are detected in the input count data...")
+        warning("NAs are detected in the input count data...")
         return(invisible(NULL))
     }
     if (sum(CountData < 0) > 0) {
-        show.custom.warning("Negative values are detected in the input count data...")
+        warning("Negative values are detected in the input count data...")
     }
     if (all(CountData == 0)) {
-        show.custom.warning("All elements of the input count data are zeros...")
+        warning("All elements of the input count data are zeros...")
         return(invisible(NULL))
     }
     if (length(unique(group)) != 2) {
-        show.custom.warning("Factor levels of group is not two...")
+        warning("Factor levels of group is not two...")
         return(invisible(NULL))
     }
     if (table(group)[1] < 2 | table(group)[2] < 2) {
-        show.custom.warning("Too few samples (< 2) in a group...")
+        warning("Too few samples (< 2) in a group...")
         return(invisible(NULL))
     }
     if (ncol(CountData) != length(group) | ncol(CountData) != length(CellCluster)) {
-        show.custom.warning("The length of 'group' & 'CellCluster' must be equal to the number of columns of the count data...")
+        warning("The length of 'group' & 'CellCluster' must be equal to the number of columns of the count data...")
         return(invisible(NULL))
     }
     if (!is.null(CellAuxil) & ncol(CountData) != length(CellAuxil)) {
-        show.custom.warning("The length of the cell-level covariate factor should be the same as the number of cells in your count data...")
+        warning("The length of the cell-level covariate factor should be the same as the number of cells in your count data...")
         return(invisible(NULL))
     }
     if (!is.numeric(c(maxit, eps))) {
-        show.custom.warning("The data type of maxit and eps is not numeric...")
+        warning("The data type of maxit and eps is not numeric...")
         return(invisible(NULL))
     }
     if (length(maxit) != 1) {
-        show.custom.warning("The length of 'maxit' is not one...")
+        warning("The length of 'maxit' is not one...")
         return(invisible(NULL))
     }
     if (length(eps) != 1) {
-        show.custom.warning("The length of the convergence criterion is not one...")
+        warning("The length of the convergence criterion is not one...")
         return(invisible(NULL))
     }
     CountData <- CountData[rowSums(CountData) > 0,]
@@ -100,7 +110,7 @@ SwarnAdjLRT <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1p")
     }
     CountData <- CountData[,colSums(CountData) > 0]
     if (is.null(dim(CountData))) {
-        show.custom.warning("There may be an error in the input data dimensions. This could be due to having fewer than two genes with at least one read across all or some of the cells.")
+        warning("There may be an error in the input data dimensions. This could be due to having fewer than two genes with at least one read across all or some of the cells.")
         return(invisible(NULL))
     }
     # Covariates...
@@ -121,7 +131,7 @@ SwarnAdjLRT <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1p")
             }
             CE <- ifelse(CE < 0, 0, CE)
             if (any(CE >= 1)) {
-                show.custom.metod(c("CE can not be more than 1, please carefully check the inputs!"))
+                message(c("CE can not be more than 1, please carefully check the inputs!"))
             }
         }
     }else {
@@ -163,9 +173,9 @@ SwarnAdjLRT <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1p")
     colnames(All_Adj_Means) <- c("All_Control_Adj_Means", "All_Other_Adj_Means")
     Adj_Fold_Change <- totalAdjMeans_2 / totalAdjMeans_1
     Adj_Log2_Fold_Change <- log2(Adj_Fold_Change)
-    results <- ZINBEM(counts_data = CountData, group, CellCluster, CellAuxil, weights, muoffset, phioffset, maxit, eps)
+    results <- suppressWarnings(ZINBEM(counts_data = CountData, group, CellCluster, CellAuxil, weights, muoffset, phioffset, maxit, eps))
     # Adjusting the p-values...
-    show.custom.metod(c("\nCorrection for multiple hypothesis testing."))
+    message(c("\nCorrection for multiple hypothesis testing."))
     adj.method <- stats::p.adjust.methods[match(p.value.adj.method, stats::p.adjust.methods)]
     if (is.na(adj.method)) {adj.method <- "BH"}
     p.DE <- as.vector(results$DE.stat[,2])

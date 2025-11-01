@@ -23,6 +23,4 @@ The probability density.
 \description{
 This function calculates the probability density for a Zero-Inflated Negative Binomial (ZINB) distribution.
 }
-\examples{
-dzinb_results <- SwarnSeq::dzinb(x = c(1, 2, 5, 4, 7, 0), size = 1, mu = 3, rho = .4, log = TRUE)
-}
+\keyword{internal}

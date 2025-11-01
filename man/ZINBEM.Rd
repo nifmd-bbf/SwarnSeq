@@ -41,17 +41,4 @@ This function returns a list of results.
 \description{
 This function uses the Expected-Maximization (EM) algorithm to estimate the maximum likelihood estimates (MLE) of the parameters.
 }
-\examples{
-# Do not run.
-library(SwarnSeq)
-# Load the test data.
-data(TestData)
-CountData <- as.matrix(TestData$CountData[1:100,1:50])
-CountData <- cbind(CountData, TestData$CountData[1:100,300:349])
-group <- c(rep(1,50), rep(2,50))
-CellCluster <- c(rep(1,30), rep(2,20), rep(3, 10), rep(4, 15), rep(5, 25))
-group <- as.factor(group)
-CellCluster <- as.factor(CellCluster)
-CellAuxil <- as.factor(c(rep("A",14), rep("B",26), rep("C", 40), rep("E", 20)))  # Optional
-results <- ZINBEM(counts_data = CountData,group = group,CellCluster = CellCluster)
-}
+\keyword{internal}
