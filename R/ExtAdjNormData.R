@@ -1,61 +1,69 @@
 #' @title Two-Factor Normalized Counts Matrix Splitting Function
 #' @description
 #' This function adjusts the scRNA-seq data by capture efficiency for each cell, then normalizes the adjusted matrix, and finally splits the matrix into two distinct matrices based on the number of factors in the group vector.
-#' @param CountData This is a gene-by-cell raw count matrix.
+#' @param sce This is a gene-by-cell raw count matrix single cell experiment object with colData contains 'clusters', 'groups' and 'auxil' as a data frame object.
+#' # groups: This is a vector of factors with 2 levels that serves as a grouping variable that assigns each column (cell) of the count matrix to one of two predefined experimental conditions.
 #' @param norm.method There are three distinct statistical normalization methods for scRNA-seq count data:DESeq2, a maximum likelihood approach described by Ye et al. (2027); TMM, a trimmed mean method introduced by Robinson et al. (2010), both designed to correct for library size and compositional biases; and a third method, which is the log1p standard normalization method for scRNA-seq data.
-#' @param group This is a vector of factors with 2 levels that serves as a grouping variable that assigns each column (cell) of the count matrix to one of two predefined experimental conditions.
 #' @param method A string that specifies the method for computing capture efficiencies. ("ML" or "")
 #' @param RNAspike.use This is a logical parameter. If this parameter is set to TRUE, then it requires you to provide spike counts (spike) and spike concentration (spike.conc) information.
-#' @param spikes This is the observed count matrix for spike-in transcripts, where each row is a spike-in and each column is a cell. It's only required if you set RNAspike.use to TRUE.
-#' @param spike.conc This is a vector of theoretical counts for each spike-in transcript in a single cell, and it's only required if you set RNAspike.use to TRUE.
+#' @param spike_in_sce This is a single cell experiment object which contains the spike-in counts data as the main assay and spike concentrations as its row data.
+#' # spike-in counts: This is the observed count matrix for spike-in transcripts, where each row is a spike-in and each column is a cell. It's only required if you set RNAspike.use to TRUE.
+#' # spike concentrations: This is a vector of theoretical counts for each spike-in transcript in a single cell, and it's only required if you set RNAspike.use to TRUE.
 #' @param CE.range This is a two-element vector that sets the lower and upper limits for the estimated range of capture efficiencies.
 #' @returns
 #' This function returns a list of two distinct capture efficiency adjusted normalized counts matrices, based on the number of factors in the group vector for the scRNA-seq data.
 #' @importFrom stats median
 #' @importFrom stats lm
+#' @importFrom SummarizedExperiment assays
 #' @export
 #' @examples
+#' library(SingleCellExperiment)
 #' # Load the test data.
-#' data("TestData")
-#' X <- as.matrix(TestData$CountData); spike_counts <- TestData$SpikeCounts
-#' spike_conc <- TestData$SpikeConc; N.M <- "DEseq.norm"
-#' group <- c(rep(1,200), rep(2,200))
-#' group <- as.factor(group)
-#' ExtData <- SwarnSeq::ExtAdjNormData(CountData=X,norm.method=N.M,group=group,CE.range=c(0.01,0.5))
-ExtAdjNormData <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1p"), group, method = "ML", RNAspike.use = FALSE, spikes, spike.conc, CE.range = c(.01,.5)) {
-    show.custom.metod <- function(x) message(x);show.custom.warning <- function(x) warning(x)
+#' data(SwarnSeqToyData); data(SpikeInData)
+#' data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
+#' groups <- SwarnSeqToyData$groups[c(1:50, 350:399)]
+#' clusters <- SwarnSeqToyData$clusters[c(1:50, 350:399)]
+#' X <- data.frame(clusters = clusters, groups=groups)
+#' testData <- SingleCellExperiment(assays=list(counts = data),colData=X)
+#' ExtData <- extAdjNormData(sce=testData,norm.method="log1p",CE.range=c(0.01,0.5))
+extAdjNormData <- function(sce, norm.method = c("DEseq.norm", "TMM", "log1p"), method = "ML", RNAspike.use = FALSE, spike_in_sce, CE.range = c(.01,.5)) {
+    CountData <- assays(sce)[[1]]; group <- sce$groups
+    if (RNAspike.use == TRUE) {
+        spikes <- assays(spike_in_sce)[[1]]
+        spike.conc <- SingleCellExperiment::rowData(spike_in_sce)[[1]]
+    }
     if (!is.matrix(CountData)) {
-        show.custom.warning("Wrong input data type of count data...")
+        warning("Wrong input data type of count data...")
         return(invisible(NULL))
     }
     if (sum(is.na(CountData)) > 0) {
-        show.custom.warning("NAs are detected in the input count data...")
+        warning("NAs are detected in the input count data...")
         return(invisible(NULL))
     }
     if (sum(CountData < 0) > 0) {
-        show.custom.warning("Negative values are detected in the input count data...")
+        warning("Negative values are detected in the input count data...")
     }
     if (all(CountData == 0)) {
-        show.custom.warning("All elements of the input count data are zeros...")
+        warning("All elements of the input count data are zeros...")
         return(invisible(NULL))
     }
     if (length(unique(group)) != 2) {
-        show.custom.warning("Factor levels of group is not two...")
+        warning("Factor levels of group is not two...")
         return(invisible(NULL))
     }
     if (table(group)[1] < 2 | table(group)[2] < 2) {
-        show.custom.warning("Too few samples (< 2) in a group...")
+        warning("Too few samples (< 2) in a group...")
         return(invisible(NULL))
     }
     if (ncol(CountData) != length(group)) {
-        show.custom.warning("The length of 'group' & 'CellCluster' must be equal to the number of columns of the count data...")
+        warning("The length of 'group' & 'CellCluster' must be equal to the number of columns of the count data...")
         return(invisible(NULL))
     }
     CountData <- CountData[rowSums(CountData) > 0,]
     group <- group[colSums(CountData) > 0]
     CountData <- CountData[,colSums(CountData) > 0]
     if (is.null(dim(CountData))) {
-        show.custom.warning("There may be an error in the input data dimensions. This could be due to having fewer than two genes with at least one read across all or some of the cells.")
+        warning("There may be an error in the input data dimensions. This could be due to having fewer than two genes with at least one read across all or some of the cells.")
         return(invisible(NULL))
     }
     if (RNAspike.use) {
@@ -73,7 +81,7 @@ ExtAdjNormData <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1
             }
             CE <- ifelse(CE < 0, 0, CE)
             if (any(CE >= 1)) {
-                show.custom.metod("CE can not be more than 1, please carefully check the inputs!")
+                message("CE can not be more than 1, please carefully check the inputs!")
             }
         }
     }else {
@@ -81,7 +89,7 @@ ExtAdjNormData <- function(CountData, norm.method = c("DEseq.norm", "TMM", "log1
             CE.range <- c(0.01, 0.2)
         }else {
             if (CE.range[1] < 0 | CE.range[1] > CE.range[2] | CE.range[2] > 1) {
-                show.custom.warning("CE.range is invalid!")
+                warning("CE.range is invalid!")
                 return(invisible(NULL))
             }
         }

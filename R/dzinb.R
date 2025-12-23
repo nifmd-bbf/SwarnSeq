@@ -8,9 +8,8 @@
 #' @param log A logical value. If TRUE, this function returns the logarithm of the density. Otherwise, it returns the density itself.
 #' @returns
 #' The probability density.
-#' @export
-#' @examples
-#' dzinb_results <- SwarnSeq::dzinb(x = c(1, 2, 5, 4, 7, 0), size = 1, mu = 3, rho = .4, log = TRUE)
+#' @keywords internal
+#'
 dzinb <- function(x, size, mu, rho, log) {
     show.custom.warning <- function(x) warning(x)
     if (sum(is.na(x)) > 0) {

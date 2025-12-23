@@ -25,20 +25,8 @@
 #' @importFrom stats dnbinom
 #' @importFrom stats pchisq
 #' @importFrom stats make.link
-#' @export
-#' @examples
-#' # Do not run.
-#' library(SwarnSeq)
-#' # Load the test data.
-#' data(TestData)
-#' CountData <- as.matrix(TestData$CountData[1:100,1:50])
-#' CountData <- cbind(CountData, TestData$CountData[1:100,300:349])
-#' group <- c(rep(1,50), rep(2,50))
-#' CellCluster <- c(rep(1,30), rep(2,20), rep(3, 10), rep(4, 15), rep(5, 25))
-#' group <- as.factor(group)
-#' CellCluster <- as.factor(CellCluster)
-#' CellAuxil <- as.factor(c(rep("A",14), rep("B",26), rep("C", 40), rep("E", 20)))  # Optional
-#' results <- ZINBEM(counts_data = CountData,group = group,CellCluster = CellCluster)
+#' @keywords internal
+#'
 ZINBEM <- function(counts_data, group, CellCluster, CellAuxil = NULL, weights = NULL, muoffset = NULL, phioffset = NULL, maxit = NULL, eps = NULL) {
     # Calling all the functions required for this function to run..
     zinb_loglikfun <- function(par, Ycounts, X, Z, weights, offsetx, offsetz) {
@@ -80,8 +68,6 @@ ZINBEM <- function(counts_data, group, CellCluster, CellAuxil = NULL, weights = 
         gradients_theta <- sum(wres_theta * weights)
         return(c(gradients_beta, gradients_gamma, gradients_theta))
     }
-    ################### Functions are to be used in the later stages of this process #######################
-    show.custom.metod <- function(x) message(x);show.custom.warning <- function(x) warning(x)
     ################### Parameters setup ###################
     group <- as.factor(group);CellCluster <- as.factor(CellCluster)
     if (is.null(CellAuxil)) {
@@ -114,7 +100,7 @@ ZINBEM <- function(counts_data, group, CellCluster, CellAuxil = NULL, weights = 
     }
     glm.nb.error <- vector();glm.nb.limit.reach.error <- vector()
     for (i in seq_len(length.out = m)) {
-        show.custom.metod(c("SwarnSeq is analyzing the gene at index ",i,"."))
+        message(c("SwarnSeq is analyzing the gene at index ",i,"."))
         Y <- counts_data[i,];Y0 <- Y == 0;Y1 <- Y > 0
         # EM function setup..
         model_count <- glm.fit(x = X, y = Y, family = stats::poisson(), weights = weights, offset = offsetz)
@@ -142,15 +128,15 @@ ZINBEM <- function(counts_data, group, CellCluster, CellAuxil = NULL, weights = 
                     iter <- iter + 1;Convergence <- TRUE
                     if (iter > maxit) {
                         Convergence <- FALSE
-                        show.custom.metod(c("Convergence was not achieved in maxit."))
+                        # message(c("Convergence was not achieved in maxit."))
                         break
                     }
                 }
                 start$iter <- iter;start$Convergence <- Convergence;start$loglik_diff <- ll_old - ll_new
             },
             error = function(e) {
-                show.custom.warning("Exiting MASS::glm.nb method..")
-                show.custom.metod(c("An error occured: ", e$message))
+                # warning("Exiting MASS::glm.nb method..")
+                # message(c("An error occured: ", e$message))
             }
         )
         if (!is.na(ll_new) && !is.na(ll_old)) {
@@ -246,7 +232,7 @@ ZINBEM <- function(counts_data, group, CellCluster, CellAuxil = NULL, weights = 
     rm(params, count_group, count_clust, zero_group, zero_clust, iter)
     res$glm.nb.error.gene.index <- glm.nb.error
     res$glm.nb.limit.reach.error.gene.index <- glm.nb.limit.reach.error
-    show.custom.metod(c(" "))
-    show.custom.metod(c("\nThis process has been completed successfully.\n"))
+    message(c(" "))
+    message(c("\nThis process has been completed successfully.\n"))
     return(res)
 }

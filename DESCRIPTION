@@ -1,7 +1,7 @@
 Package: SwarnSeq
 Type: Package
 Title: Differential Expression and Differential Zero Inflation analysis
-Version: 0.99.2
+Version: 0.99.4
 Authors@R: c(
     person(
       "Samarendra", "Das",
@@ -38,7 +38,9 @@ Suggests:
 Imports: 
     stats,
     MASS,
-    edgeR
+    edgeR,
+    SingleCellExperiment,
+    SummarizedExperiment
 biocViews: Software, SingleCell, RNASeq, DifferentialExpression, GeneExpression, StatisticalMethod
 URL: https://github.com/nifmd-bbf/SwarnSeq
 BugReports: https://github.com/nifmd-bbf/SwarnSeq/issues

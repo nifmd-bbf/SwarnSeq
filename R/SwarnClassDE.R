@@ -7,36 +7,36 @@
 #' It returns the list with one more element, SwarnClassDE, that represents the SwarnClass.
 #' @export
 #' @examples
-#' # Do not run.
-#' library(SwarnSeq)
+#' library(SingleCellExperiment)
 #' # Load the test data.
-#' data(TestData)
-#' CountData <- as.matrix(TestData$CountData[1:100,1:50])
-#' X <- cbind(CountData, TestData$CountData[1:100,300:349])
-#' group <- c(rep(1,50), rep(2,50))
-#' CellCluster <- c(rep(1,30), rep(2,20), rep(3, 10), rep(4, 15), rep(5, 25))
-#' group <- as.factor(group)
-#' clust <- as.factor(CellCluster)
-#' # CellAuxil <- as.factor(c(rep("A",14), rep("B",26), rep("C", 40), rep("E", 20)))  # Optional
-#' res <- SwarnSeq::SwarnAdjLRT(CountData=X,norm.method="DEseq.norm",group=group,CellCluster=clust)
-#' SwarnClass <- SwarnSeq::SwarnClassDE(results = res, alpha = 0.01)
-SwarnClassDE <- function(results, alpha) {
-    show.custom.warning <- function(x) warning(x)
+#' data(SwarnSeqToyData); data(SpikeInData)
+#' data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
+#' groups <- SwarnSeqToyData$groups[c(1:50, 350:399)]
+#' clusters <- SwarnSeqToyData$clusters[c(1:50, 350:399)]
+#'
+#' X <- data.frame(clusters = clusters, groups = groups)
+#' testData <- SingleCellExperiment(assays = list(counts = data), colData = X)
+#' # SpikeInData <- SingleCellExperiment(assays=list(SpikeCounts),rowData=SpikeConc)
+#' # Make the spike-in single cell experiment object like this.
+#'
+#' res <- swarnAdjLrt(sce=testData,norm.method="log1p",RNAspike.use=TRUE,spike_in_sce=SpikeInData)
+#' SwarnClass <- swarnClassDe(results = res, alpha = 0.01)
+swarnClassDe <- function(results, alpha) {
     var <- length(results)
     if (!is.list(results) & !is.matrix(results[[var]])) {
-        show.custom.warning("Invalid input of the wrong data type of the results.")
+        warning("Invalid input of the wrong data type of the results.")
         return(invisible(NULL))
     }
     if (ncol(results[[var]]) != 12) {
-        show.custom.warning("Invalid input of the wrong number of columns of the results. Must be the same object from 'SwarnSeqLRT' or 'SwarnUnadjLRT.'")
+        warning("Invalid input of the wrong number of columns of the results. Must be the same object from 'SwarnSeqLRT' or 'SwarnUnadjLRT.'")
         return(invisible(NULL))
     }
     if (!is.numeric(alpha)) {
-        show.custom.warning("Invalid input of the wrong data type for m (number of tags).")
+        warning("Invalid input of the wrong data type for m (number of tags).")
         return(invisible(NULL))
     }
     if (alpha <= 0 | alpha > nrow(results[[var]])) {
-        show.custom.warning("Invalid input of the wrong value of m.")
+        warning("Invalid input of the wrong value of m.")
         return(invisible(NULL))
     }
     class <- ifelse(results[[var]][,9] < alpha & results[[var]][,11] < alpha, "DE&DZI", ifelse(results[[var]][,9] < alpha, "DE", ifelse(results[[var]][,11] < alpha, "DZI", "NonDE")))
