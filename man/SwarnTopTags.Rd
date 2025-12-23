@@ -18,10 +18,7 @@ A list of the top genes along with their statistics.
 This function selects the most statistically significant genes in your scRNA-seq data.
 }
 \examples{
-# Do not run.
-library(SwarnSeq)
 library(SingleCellExperiment)
-library(SummarizedExperiment)
 # Load the test data.
 data(SwarnSeqToyData); data(SpikeInData)
 data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]

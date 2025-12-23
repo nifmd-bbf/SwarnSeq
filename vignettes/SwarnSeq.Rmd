@@ -55,7 +55,17 @@ To keep the runtime managable for this demonstration, we'have utilized a subsamp
 ```{r, Install_SwarnSeq, eval = FALSE}
 # Install the package from Github.
 devtools::install_github("nifmd-bbf/SwarnSeq", build_vignettes = TRUE)
-library(SwarnSeq)
+```
+# Installation
+
+`SwarnSeq` package can be installed from Bioconductor using the following
+command: 
+
+```{r eval = FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("SwarnSeq")
 ```
 ```{r, Load_Package, include = FALSE}
 # Load the package
@@ -63,51 +73,31 @@ library(SwarnSeq)
 ```
 
 ```{r}
-library(SwarnSeq)
 library(SingleCellExperiment)
-library(SummarizedExperiment)
 # Load the test data.
 data(SwarnSeqToyData); data(SpikeInData)
 data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
 groups <- SwarnSeqToyData$groups[c(1:50, 350:399)]
 clusters <- SwarnSeqToyData$clusters[c(1:50, 350:399)]
+# Make the spike-in single cell experiment object like the following examples.
 testData <- SingleCellExperiment(assays = list(counts = data), colData = data.frame(clusters = clusters, groups = groups))
-# SpikeInData <- SingleCellExperiment(assays = list(TestData$SpikeCounts), rowData = TestData$SpikeConc)
-# Make the spike-in single cell experiment object like this.
-SwarnAdjLRT_Results <- swarnAdjLrt(sce=testData,norm.method="DEseq.norm", RNAspike.use = TRUE, spike_in_sce = SpikeInData)
+SwarnAdjLRT_Results <- swarnAdjLrt(sce = testData,norm.method = "DEseq.norm", RNAspike.use = TRUE, spike_in_sce = SpikeInData)
 ```
 # Information about the functions
 
 Please visit the documentation page to know more about the functionality of each function in detail.
 
-
 ```{r}
 SwarnClass <- swarnClassDe(results = SwarnAdjLRT_Results, alpha = 0.01)
-
 top_genes <- swarnTopTags(results = SwarnAdjLRT_Results, m = 50)
 ```
 
 ```{r}
-library(SwarnSeq)
-library(SingleCellExperiment)
-library(SummarizedExperiment)
-
-# Load the test data.
-data(SwarnSeqToyData); data(SpikeInData)
-data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
-groups <- SwarnSeqToyData$groups[c(1:50, 350:399)]
-clusters <- SwarnSeqToyData$clusters[c(1:50, 350:399)]
-testData <- SingleCellExperiment(assays = list(counts = data), colData = data.frame(clusters = clusters, groups = groups))
-# SpikeInData <- SingleCellExperiment::SingleCellExperiment(assays = list(TestData$SpikeCounts), rowData = TestData$SpikeConc)
-# Make the spike-in single cell experiment object like this.
-
 capeff <- capEff(sce = testData,CE.range = c(0.01, 0.05),RNAspike.use = TRUE, spike_in_sce = SpikeInData,method = "")
-
-extractedAdjNormData <- extAdjNormData(sce=testData,norm.method="log1p",CE.range=c(0.01,0.5))
+extractedAdjNormData <- extAdjNormData(sce=testData,norm.method = "log1p",CE.range = c(0.01,0.5))
 ```
 
 ## Session Information
-
 ```{r sessionInfo}
 utils::sessionInfo()
 ```
@@ -123,4 +113,4 @@ Reference to methods
 
 Das, S., & Rai, S. N. (2021). SwarnSeq: An improved statistical approach for differential expression analysis of single-cell RNA-seq data. Genomics, 113(3), 1308–1324. https://doi.org/10.1016/j.ygeno.2021.02.014
 
-We hope this package helps you get the best Differential Expression Analyses results for your scRNA-seq data and assist you in making the best decisions based on those results.
+We hope this package helps you get the best Differential Expression Analysis results for your scRNA-seq data and assist you in making the best decisions based on those results.

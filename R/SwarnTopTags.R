@@ -7,10 +7,7 @@
 #' A list of the top genes along with their statistics.
 #' @export
 #' @examples
-#' # Do not run.
-#' library(SwarnSeq)
 #' library(SingleCellExperiment)
-#' library(SummarizedExperiment)
 #' # Load the test data.
 #' data(SwarnSeqToyData); data(SpikeInData)
 #' data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
@@ -28,20 +25,16 @@ swarnTopTags <- function(results, m){
     var <- length(results)
     if (!is.list(results) & !is.matrix(results[[var]])) {
         warning("Invalid input of the wrong data type of the results.")
-        return(invisible(NULL))
-    }
+        return(invisible(NULL))}
     if (ncol(results[[var]]) != 12) {
         warning("Invalid input of the wrong number of columns of the results. Must be the same object from 'SwarnUnadjLRT' or 'SwarnAdjLRT.'")
-        return(invisible(NULL))
-    }
+        return(invisible(NULL))}
     if (!is.numeric(m)) {
         warning("Invalid input of the wrong data type for m (number of tags).")
-        return(invisible(NULL))
-    }
+        return(invisible(NULL))}
     if (m <= 0 | m > nrow(results[[var]])) {
         warning("Invalid input of the wrong value of m.")
-        return(invisible(NULL))
-    }
+        return(invisible(NULL))}
     # Top Tags
     p.DE <- results[[var]][,9];p.DZI <- results[[var]][,11]
     id <- sort(p.DE, decreasing = FALSE, index.return = TRUE)$ix

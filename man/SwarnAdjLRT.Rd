@@ -59,10 +59,7 @@ The primary objective is to identify genes with statistically significant change
 This analysis is a downstream step following the initial read mapping and gene counting, which generates the input matrix. By contrasting the expression profiles of the two groups, the function identifies biomarkers or genes that characterize the biological differences between them.
 }
 \examples{
-# Do not run.
-library(SwarnSeq)
 library(SingleCellExperiment)
-library(SummarizedExperiment)
 # Load the test data.
 data(SwarnSeqToyData); data(SpikeInData)
 data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]

@@ -36,10 +36,7 @@ This function returns a list of two distinct capture efficiency adjusted normali
 This function adjusts the scRNA-seq data by capture efficiency for each cell, then normalizes the adjusted matrix, and finally splits the matrix into two distinct matrices based on the number of factors in the group vector.
 }
 \examples{
-# Do not run.
-library(SwarnSeq)
 library(SingleCellExperiment)
-library(SummarizedExperiment)
 # Load the test data.
 data(SwarnSeqToyData); data(SpikeInData)
 data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]

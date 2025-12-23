@@ -18,10 +18,7 @@ It returns the list with one more element, SwarnClassDE, that represents the Swa
 This function is used to clasify the influential genes of single-cell RNA-seq (scRNA-seq) data.
 }
 \examples{
-# Do not run.
-library(SwarnSeq)
 library(SingleCellExperiment)
-library(SummarizedExperiment)
 # Load the test data.
 data(SwarnSeqToyData); data(SpikeInData)
 data <- assays(SwarnSeqToyData)[[1]][1:20, c(1:50, 350:399)]
