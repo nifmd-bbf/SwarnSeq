@@ -36,7 +36,3 @@ test_that("The two matrices in the list have equal gene counts", {
     expect_length(top_genes, 2)
     expect_equal(nrow(top_genes[[1]]), nrow(top_genes[[2]]))
 })
-
-
-
-

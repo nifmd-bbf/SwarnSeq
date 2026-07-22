@@ -8,7 +8,7 @@ author:
     affiliation: Odisha University of Agriculture & Technology
     email: satyajitchhatoi016@gmail.com
 output: BiocStyle::html_document
-vignette: >
+vignette: > 
   %\VignetteIndexEntry{SwarnSeq}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
