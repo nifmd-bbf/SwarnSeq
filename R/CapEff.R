@@ -15,6 +15,7 @@
 #' This function returns the capture efficiencies of all the cells as a vector.
 #' @importFrom stats lm
 #' @importFrom SummarizedExperiment assays
+#' @importFrom SingleCellExperiment rowData
 #' @export
 #' @examples
 #' library(SingleCellExperiment)

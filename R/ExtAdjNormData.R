@@ -15,6 +15,8 @@
 #' @importFrom stats median
 #' @importFrom stats lm
 #' @importFrom SummarizedExperiment assays
+#' @importFrom SingleCellExperiment rowData
+#' @importFrom edgeR calcNormFactors
 #' @export
 #' @examples
 #' library(SingleCellExperiment)
@@ -98,7 +100,7 @@ extAdjNormData <- function(sce, norm.method = c("DEseq.norm", "TMM", "log1p"), m
         rand.CE <- CE.range[1] + (CE.range[2] - CE.range[1]) * ls.wt
         CE <- rand.CE;names(CE) <- colnames(CountData)
     }
-    CountData <- sweep(CountData, 2, CE, '/')
+    CountData <- suppressWarnings(sweep(CountData, 2, CE, '/'))
     if (norm.method == "DEseq.norm") {
         GM <- function(x) exp(mean(log(x[x > 0])))
         geomMean <- apply(CountData, 1, GM)
